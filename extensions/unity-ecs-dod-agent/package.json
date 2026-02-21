@@ -1,0 +1,92 @@
+{
+  "name": "unity-ecs-dod-agent",
+  "displayName": "Unity ECS DOD AI Agent",
+  "description": "AI Agentic assistant for Unity ECS Data-Oriented Design with multi-LLM support (Ollama, OpenAI, Claude, Gemini, Groq)",
+  "version": "0.1.0",
+  "engines": { "vscode": "^1.85.0" },
+  "categories": ["Other", "Programming Languages"],
+  "activationEvents": ["workspaceContains:**/*.asmdef", "onCommand:unityDOD.start"],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      { "command": "unityDOD.start", "title": "Unity DOD: Open Architect Panel" },
+      { "command": "unityDOD.analyzeData", "title": "Unity DOD: Analyze Data Layer" },
+      { "command": "unityDOD.generateSystem", "title": "Unity DOD: Generate ECS System" },
+      { "command": "unityDOD.refactorToECS", "title": "Unity DOD: Refactor to ECS" },
+      { "command": "unityDOD.scanProject", "title": "Unity DOD: Scan Unity Project" }
+    ],
+    "configuration": {
+      "title": "Unity ECS DOD Agent",
+      "properties": {
+        "unityDOD.llm.providers": {
+          "type": "object",
+          "default": { "primary": "ollama", "fallback": ["openai", "anthropic", "groq"], "privacyMode": true },
+          "description": "LLM provider routing configuration"
+        },
+        "unityDOD.llm.ollama": {
+          "type": "object",
+          "default": {
+            "endpoint": "http://localhost:11434",
+            "models": {
+              "codeGeneration": "deepseek-coder-v2:16b",
+              "analysis": "llama3.1:70b",
+              "fast": "codellama:7b"
+            }
+          }
+        },
+        "unityDOD.llm.openai": {
+          "type": "object",
+          "default": { "model": "gpt-4o" }
+        },
+        "unityDOD.llm.anthropic": {
+          "type": "object",
+          "default": { "model": "claude-3-5-sonnet-20241022" }
+        },
+        "unityDOD.llm.groq": {
+          "type": "object",
+          "default": { "model": "llama-3.3-70b-versatile" }
+        },
+        "unityDOD.workflow.enforceDataFirstApproach": {
+          "type": "boolean",
+          "default": true,
+          "description": "Block System generation until Data and Archetype phases are complete"
+        },
+        "unityDOD.workflow.requireArchetypeApproval": {
+          "type": "boolean",
+          "default": true
+        },
+        "unityDOD.analysis.warnManagedComponents": {
+          "type": "boolean",
+          "default": true
+        },
+        "unityDOD.analysis.targetChunkFillRate": {
+          "type": "number",
+          "default": 0.8
+        }
+      }
+    },
+    "viewsContainers": {
+      "activitybar": [
+        { "id": "unity-dod-agent", "title": "Unity DOD Agent", "icon": "$(robot)" }
+      ]
+    },
+    "views": {
+      "unity-dod-agent": [
+        { "type": "webview", "id": "unityDOD.architectPanel", "name": "DOD Architect" },
+        { "type": "webview", "id": "unityDOD.chatView", "name": "AI Chat" }
+      ]
+    }
+  },
+  "scripts": {
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.85.0",
+    "@types/node": "^18.0.0",
+    "typescript": "^5.3.0"
+  },
+  "dependencies": {
+    "node-fetch": "^3.3.0"
+  }
+}
