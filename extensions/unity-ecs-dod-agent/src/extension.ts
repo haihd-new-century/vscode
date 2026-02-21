@@ -61,7 +61,7 @@ export function activate(context: vscode.ExtensionContext) {
       }
       vscode.window.withProgress({ location: vscode.ProgressLocation.Notification, title: 'Refactoring to Unity ECS...' }, async () => {
         const result = await refactorAgent.refactorOOPtoECS(selectedText);
-        const doc = await vscode.workspace.openTextDocument({ content: result.code, language: 'csharp' });
+        const doc = await vscode.workspace.openTextDocument({ content: result.refactoredCode, language: 'csharp' });
         await vscode.window.showTextDocument(doc, vscode.ViewColumn.Beside);
       });
     }),
@@ -83,4 +83,4 @@ export function activate(context: vscode.ExtensionContext) {
   );
 }
 
-export function deactivate() {}
+export function deactivate() { }
