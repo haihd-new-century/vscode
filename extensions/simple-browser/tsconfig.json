@@ -5,6 +5,10 @@
 		"outDir": "./out",
 		"typeRoots": [
 			"./node_modules/@types"
+		],
+		"types": [
+			"node",
+			"vscode-webview"
 		]
 	},
 	"include": [

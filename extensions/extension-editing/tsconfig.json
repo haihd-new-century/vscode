@@ -5,6 +5,11 @@
 		"outDir": "./out",
 		"typeRoots": [
 			"./node_modules/@types"
+		],
+		"skipLibCheck": true,
+		"types": [
+			"node",
+			"markdown-it"
 		]
 	},
 	"include": [
