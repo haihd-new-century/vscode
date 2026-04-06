@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
-import { AikosApiClient, AgentSSEEvent } from '../../core/api-client';
+import { AikosApiClient } from '../../core/api-client';
 import { eventBus } from '../../core/event-bus';
-import { logInfo, logError } from '../../core/logger';
+import { logError } from '../../core/logger';
 
 // ─── Types ────────────────────────────────────────────────────────────────
 
@@ -62,7 +62,7 @@ export class TaskDetailPanel {
   }
 
   private constructor(
-    private readonly context: vscode.ExtensionContext,
+    _context: vscode.ExtensionContext,
     private readonly apiClient: AikosApiClient,
     taskId: string,
   ) {
@@ -303,9 +303,6 @@ async function showFileDiff(
     const diff = await apiClient.get<{ original: string; modified: string }>(
       `/tasks/${taskId}/files/${encodeURIComponent(filePath)}/diff`,
     );
-
-    const originalUri = vscode.Uri.parse(`aikos-diff:original/${filePath}`);
-    const modifiedUri = vscode.Uri.parse(`aikos-diff:modified/${filePath}`);
 
     // Use a simple in-memory content provider approach via untitled docs
     const originalDoc = await vscode.workspace.openTextDocument({

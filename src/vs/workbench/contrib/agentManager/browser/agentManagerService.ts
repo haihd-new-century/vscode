@@ -6,8 +6,6 @@
 import { createDecorator } from '../../../../platform/instantiation/common/instantiation.js';
 import { Disposable } from '../../../../base/common/lifecycle.js';
 import { Emitter, Event } from '../../../../base/common/event.js';
-import { ILayoutService } from '../../../../platform/layout/browser/layoutService.js';
-
 // ─── Types ────────────────────────────────────────────────────────────────
 
 export interface IAgentTask {
@@ -58,9 +56,7 @@ export class AgentManagerService extends Disposable implements IAgentManagerServ
 	private readonly _onDidChangeActiveTask = this._register(new Emitter<IAgentTask | undefined>());
 	readonly onDidChangeActiveTask: Event<IAgentTask | undefined> = this._onDidChangeActiveTask.event;
 
-	constructor(
-		@ILayoutService private readonly _layoutService: ILayoutService,
-	) {
+	constructor() {
 		super();
 	}
 

@@ -1,5 +1,4 @@
 import * as vscode from 'vscode';
-import * as path from 'path';
 import { AikosApiClient, ChatSSEEvent, Citation } from '../../core/api-client';
 import { AikosState } from '../../core/state';
 import { eventBus } from '../../core/event-bus';

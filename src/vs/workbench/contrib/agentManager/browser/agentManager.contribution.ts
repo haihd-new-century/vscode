@@ -5,7 +5,7 @@
 
 import { localize, localize2 } from '../../../../nls.js';
 import { Disposable } from '../../../../base/common/lifecycle.js';
-import { IInstantiationService } from '../../../../platform/instantiation/common/instantiation.js';
+import { IInstantiationService, ServicesAccessor } from '../../../../platform/instantiation/common/instantiation.js';
 import { InstantiationType, registerSingleton } from '../../../../platform/instantiation/common/extensions.js';
 import { Registry } from '../../../../platform/registry/common/platform.js';
 import { SyncDescriptor } from '../../../../platform/instantiation/common/descriptors.js';
@@ -13,7 +13,6 @@ import { ViewPaneContainer } from '../../../browser/parts/views/viewPaneContaine
 import { IViewContainersRegistry, IViewsRegistry, IViewDescriptor, ViewContainerLocation, Extensions as ViewExtensions, ViewContainer } from '../../../common/views.js';
 import { IWorkbenchContribution, registerWorkbenchContribution2, WorkbenchPhase } from '../../../common/contributions.js';
 import { registerAction2, Action2 } from '../../../../platform/actions/common/actions.js';
-import { ServicesAccessor } from '../../../../platform/instantiation/common/instantiation.js';
 import { Codicon } from '../../../../base/common/codicons.js';
 import { registerIcon } from '../../../../platform/theme/common/iconRegistry.js';
 import { IAgentManagerService } from './agentManagerService.js';
@@ -107,8 +106,8 @@ class AgentManagerContribution extends Disposable implements IWorkbenchContribut
 	static readonly ID = 'workbench.contrib.agentManager';
 
 	constructor(
-		@IInstantiationService private readonly _instantiationService: IInstantiationService,
-		@IAgentManagerService private readonly _agentManagerService: IAgentManagerService,
+		@IInstantiationService _instantiationService: IInstantiationService,
+		@IAgentManagerService _agentManagerService: IAgentManagerService,
 	) {
 		super();
 		// Agent Manager contribution initialized

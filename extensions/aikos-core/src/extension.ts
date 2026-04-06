@@ -11,7 +11,7 @@ import { registerTasksView, TasksTreeProvider } from './features/tasks/tasks-pro
 import { registerApprovalView, ApprovalTreeProvider } from './features/approval/approval-provider';
 import { registerCollectionsView, CollectionsTreeProvider } from './features/collections/collections-provider';
 import { registerSearchView, SearchTreeProvider } from './features/search/search-provider';
-import { registerMemoryView, MemoryTreeProvider } from './features/memory/memory-provider';
+import { registerMemoryView } from './features/memory/memory-provider';
 import { AikosStatusBar } from './features/metrics/status-bar';
 import { registerCompletionProvider } from './features/completion/completion-provider';
 import { registerCodeLensProvider } from './features/codelens/codelens-provider';
@@ -20,7 +20,7 @@ import { registerTerminalProvider } from './features/terminal/terminal-provider'
 import { registerNL2SQLPanel, NL2SQLPanel } from './features/nl2sql/nl2sql-panel';
 import { registerAgentStreamViewer, AgentStreamViewer } from './features/tasks/agent-stream-viewer';
 import { TaskDetailPanel } from './features/tasks/task-detail-panel';
-import { registerTaskTracker, TaskTracker } from './features/tasks/task-tracker';
+import { registerTaskTracker } from './features/tasks/task-tracker';
 import { ApprovalDetailPanel } from './features/approval/approval-detail-panel';
 import { MetricsPanel } from './features/metrics/metrics-panel';
 import { registerAuditPanel, AuditPanel } from './features/audit/audit-panel';
@@ -41,8 +41,6 @@ let collectionsProvider: CollectionsTreeProvider;
 let searchProvider: SearchTreeProvider;
 let nl2sqlPanel: NL2SQLPanel;
 let agentViewer: AgentStreamViewer;
-let taskTracker: TaskTracker;
-let memoryProvider: MemoryTreeProvider;
 let metricsPanel: MetricsPanel;
 let auditPanel: AuditPanel;
 let workflowPanel: WorkflowPanel;
@@ -70,7 +68,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
   approvalProvider = registerApprovalView(context, apiClient);
   collectionsProvider = registerCollectionsView(context, apiClient, state);
   searchProvider = registerSearchView(context, apiClient, state);
-  memoryProvider = registerMemoryView(context, apiClient);
+  registerMemoryView(context, apiClient);
 
   // 3b. Register editor providers
   registerCompletionProvider(context, apiClient, config);
@@ -79,7 +77,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
   registerTerminalProvider(context, apiClient);
   nl2sqlPanel = registerNL2SQLPanel(context, apiClient);
   agentViewer = registerAgentStreamViewer(context, apiClient);
-  taskTracker = registerTaskTracker(context, ws);
+  registerTaskTracker(context, ws);
   metricsPanel = MetricsPanel.create(apiClient);
   auditPanel = registerAuditPanel(context, apiClient);
   workflowPanel = registerWorkflowPanel(context, apiClient);
@@ -337,7 +335,7 @@ async function handleNl2sql(): Promise<void> {
   await nl2sqlPanel.query(query);
 }
 
-async function handleSettings(context: vscode.ExtensionContext): Promise<void> {
+async function handleSettings(_context: vscode.ExtensionContext): Promise<void> {
   const current = await config.getApiKey();
   const apiKey = await vscode.window.showInputBox({
     prompt: 'Enter your AIKOS API key',

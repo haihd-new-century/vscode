@@ -21,15 +21,15 @@ class AikosEventBus extends EventEmitter {
     this.emit(event, data);
   }
 
-  on(event: AikosEvent, listener: (...args: unknown[]) => void): this {
+  override on(event: AikosEvent, listener: (...args: unknown[]) => void): this {
     return super.on(event, listener);
   }
 
-  once(event: AikosEvent, listener: (...args: unknown[]) => void): this {
+  override once(event: AikosEvent, listener: (...args: unknown[]) => void): this {
     return super.once(event, listener);
   }
 
-  off(event: AikosEvent, listener: (...args: unknown[]) => void): this {
+  override off(event: AikosEvent, listener: (...args: unknown[]) => void): this {
     return super.off(event, listener);
   }
 }

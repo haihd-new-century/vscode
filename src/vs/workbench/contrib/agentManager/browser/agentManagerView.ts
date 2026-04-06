@@ -13,15 +13,12 @@ import { IViewDescriptorService } from '../../../common/views.js';
 import { IInstantiationService } from '../../../../platform/instantiation/common/instantiation.js';
 import { IOpenerService } from '../../../../platform/opener/common/opener.js';
 import { IThemeService } from '../../../../platform/theme/common/themeService.js';
-import { ITelemetryService } from '../../../../platform/telemetry/common/telemetry.js';
 import { IHoverService } from '../../../../platform/hover/browser/hover.js';
 import { IAgentManagerService, IAgentTask } from './agentManagerService.js';
-import { Disposable } from '../../../../base/common/lifecycle.js';
 import * as dom from '../../../../base/browser/dom.js';
 
 export class AgentManagerViewPane extends ViewPane {
 
-	private _container: HTMLElement | undefined;
 	private _taskListElement: HTMLElement | undefined;
 
 	constructor(
@@ -34,18 +31,16 @@ export class AgentManagerViewPane extends ViewPane {
 		@IInstantiationService instantiationService: IInstantiationService,
 		@IOpenerService openerService: IOpenerService,
 		@IThemeService themeService: IThemeService,
-		@ITelemetryService telemetryService: ITelemetryService,
 		@IHoverService hoverService: IHoverService,
 		@IAgentManagerService private readonly _agentManagerService: IAgentManagerService,
 	) {
-		super(options, keybindingService, contextMenuService, configurationService, contextKeyService, viewDescriptorService, instantiationService, openerService, themeService, telemetryService, hoverService);
+		super(options, keybindingService, contextMenuService, configurationService, contextKeyService, viewDescriptorService, instantiationService, openerService, themeService, hoverService);
 
 		this._register(this._agentManagerService.onDidChangeTasks(() => this._renderTasks()));
 	}
 
 	protected override renderBody(container: HTMLElement): void {
 		super.renderBody(container);
-		this._container = container;
 		container.classList.add('agent-manager-view');
 
 		// Header

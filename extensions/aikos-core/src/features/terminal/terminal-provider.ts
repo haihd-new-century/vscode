@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { AikosApiClient } from '../../core/api-client';
-import { logInfo, logError } from '../../core/logger';
+import { logInfo } from '../../core/logger';
 
 /**
  * Provides AIKOS terminal integration:
@@ -11,7 +11,7 @@ export class AikosTerminalProvider {
   private terminal?: vscode.Terminal;
   private readonly terminalName = 'AIKOS Agent';
 
-  constructor(private readonly apiClient: AikosApiClient) {}
+  constructor(_apiClient: AikosApiClient) {}
 
   /**
    * Execute a command in the AIKOS terminal.

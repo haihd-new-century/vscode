@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import { AikosApiClient } from '../../core/api-client';
 import { AikosState } from '../../core/state';
 import { eventBus } from '../../core/event-bus';
-import { logDebug, logError } from '../../core/logger';
+import { logDebug } from '../../core/logger';
 import { COMMANDS } from '../../constants';
 
 interface CostMetrics {

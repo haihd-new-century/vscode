@@ -56,7 +56,6 @@ export class SearchTreeProvider implements vscode.TreeDataProvider<SearchTreeIte
   get isEmpty(): boolean {
     return this.results.length === 0 && this.state.recentSearches.length === 0;
   }
-  private currentQuery = '';
 
   constructor(
     private readonly apiClient: AikosApiClient,
@@ -86,7 +85,6 @@ export class SearchTreeProvider implements vscode.TreeDataProvider<SearchTreeIte
   async search(query: string): Promise<void> {
     if (!query.trim()) return;
 
-    this.currentQuery = query;
     this.state.addRecentSearch(query);
 
     try {
@@ -110,7 +108,6 @@ export class SearchTreeProvider implements vscode.TreeDataProvider<SearchTreeIte
 
   clearResults(): void {
     this.results = [];
-    this.currentQuery = '';
     this._onDidChangeTreeData.fire(undefined);
   }
 

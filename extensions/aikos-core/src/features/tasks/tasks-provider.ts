@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import { AikosApiClient } from '../../core/api-client';
 import { eventBus } from '../../core/event-bus';
 import { logError, logDebug } from '../../core/logger';
-import { COMMANDS, VIEW_IDS } from '../../constants';
+import { VIEW_IDS } from '../../constants';
 
 // ─── Types ────────────────────────────────────────────────────────────────
 
@@ -22,7 +22,7 @@ interface AgentTask {
 
 class TaskGroupItem extends vscode.TreeItem {
   constructor(
-    public readonly label: string,
+    public override readonly label: string,
     public readonly tasks: AgentTask[],
   ) {
     super(label, vscode.TreeItemCollapsibleState.Expanded);
