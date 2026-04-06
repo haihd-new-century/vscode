@@ -85,21 +85,6 @@ registerAction2(class ToggleAgentManagerAction extends Action2 {
 	}
 });
 
-registerAction2(class FocusAgentManagerAction extends Action2 {
-	constructor() {
-		super({
-			id: 'workbench.action.focusAgentManager',
-			title: localize2('focusAgentManager', 'Focus Agent Manager'),
-			f1: true,
-		});
-	}
-
-	async run(accessor: ServicesAccessor): Promise<void> {
-		const viewsService = accessor.get(IAgentManagerService);
-		viewsService.focusPanel();
-	}
-});
-
 // ─── Workbench Contribution ───────────────────────────────────────────────
 
 class AgentManagerContribution extends Disposable implements IWorkbenchContribution {

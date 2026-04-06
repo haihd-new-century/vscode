@@ -156,6 +156,11 @@ export const tocData: ITOCEntry<string> = {
 					id: 'workbench/screencastmode',
 					label: localize('screencastMode', "Screencast Mode"),
 					settings: ['screencastMode.*']
+				},
+				{
+					id: 'workbench/browser',
+					label: localize('browser', "Browser"),
+					settings: ['workbench.browser.*']
 				}
 			]
 		},
@@ -210,7 +215,8 @@ export const tocData: ITOCEntry<string> = {
 						'chat.statusWidget.*',
 						'chat.tips.*',
 						'chat.unifiedAgentsBar.*',
-						'chat.confettiOnThumbsUp'
+						'accessibility.signals.chatUserActionRequired',
+						'accessibility.signals.chatResponseReceived'
 					]
 				},
 				{
@@ -231,8 +237,7 @@ export const tocData: ITOCEntry<string> = {
 					label: localize('chatTools', "Tools"),
 					settings: [
 						'chat.tools.*',
-						'chat.extensionTools.*',
-						'chat.edits2.enabled'
+						'chat.extensionTools.*'
 					]
 				},
 				{
@@ -258,7 +263,7 @@ export const tocData: ITOCEntry<string> = {
 						'chat.useNestedAgentsMdFiles',
 						'chat.useAgentSkills',
 						'chat.experimental.useSkillAdherencePrompt',
-						'chat.useChatHooks',
+						'chat.useHooks',
 						'chat.includeApplyingInstructions',
 						'chat.includeReferencedInstructions',
 						'chat.sendElementsToChat.*',
