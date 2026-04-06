@@ -73,6 +73,9 @@ const compilations = [
 	'extensions/vscode-colorize-perf-tests/tsconfig.json',
 	'extensions/vscode-test-resolver/tsconfig.json',
 
+	// AIKOS-FORK: Built-in AIKOS AI extension
+	'extensions/aikos-core/tsconfig.json',
+
 	'.vscode/extensions/vscode-selfhost-test-provider/tsconfig.json',
 	'.vscode/extensions/vscode-selfhost-import-aid/tsconfig.json',
 ];
