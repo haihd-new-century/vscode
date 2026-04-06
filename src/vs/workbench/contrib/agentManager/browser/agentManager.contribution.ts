@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------------------------
- *  AIKOS IDE — Agent Manager Contribution
+ *  AIKOS IDE — Agent Panel Contribution (Cursor-style)
  *  Licensed under the MIT License.
  *--------------------------------------------------------------------------------------------*/
 
@@ -17,59 +17,58 @@ import { Codicon } from '../../../../base/common/codicons.js';
 import { registerIcon } from '../../../../platform/theme/common/iconRegistry.js';
 import { IAgentManagerService } from './agentManagerService.js';
 import { AgentManagerService } from './agentManagerService.js';
-import { AgentManagerViewPane } from './agentManagerView.js';
+import { AgentPanelViewPane } from './agentManagerView.js';
 import { ILocalizedString } from '../../../../platform/action/common/action.js';
 
-// ─── Icons ────────────────────────────────────────────────────────────────
+// --- Icons ---
 
-const agentManagerIcon = registerIcon('agent-manager-view-icon', Codicon.hubot, localize('agentManagerViewIcon', 'View icon of the Agent Manager view.'));
+const agentPanelIcon = registerIcon('agent-panel-view-icon', Codicon.sparkle, localize('agentPanelViewIcon', 'View icon of the AIKOS Agent panel.'));
 
-// ─── View Container ───────────────────────────────────────────────────────
+// --- View Container (Auxiliary Bar = right sidebar) ---
 
-const VIEW_CONTAINER_ID = 'workbench.view.agentManager';
-const AGENT_MANAGER_VIEW_ID = 'workbench.panel.agentManager';
+const VIEW_CONTAINER_ID = 'workbench.view.aikosAgent';
+const AGENT_PANEL_VIEW_ID = 'workbench.view.aikosAgent.panel';
 
 const viewContainerRegistry = Registry.as<IViewContainersRegistry>(ViewExtensions.ViewContainersRegistry);
 
-const agentManagerViewContainer: ViewContainer = viewContainerRegistry.registerViewContainer({
+const agentViewContainer: ViewContainer = viewContainerRegistry.registerViewContainer({
 	id: VIEW_CONTAINER_ID,
-	title: localize2('agentManager', 'Agent Manager'),
-	icon: agentManagerIcon,
-	order: 10,
+	title: localize2('aikosAgent', 'Agent'),
+	icon: agentPanelIcon,
+	order: 0,
 	ctorDescriptor: new SyncDescriptor(ViewPaneContainer, [VIEW_CONTAINER_ID, { mergeViewWithContainerWhenSingleView: true }]),
-	storageId: 'workbench.view.agentManager',
+	storageId: VIEW_CONTAINER_ID,
 	hideIfEmpty: false,
-}, ViewContainerLocation.Panel, { isDefault: false });
+}, ViewContainerLocation.AuxiliaryBar, { isDefault: false });
 
-// ─── Views ────────────────────────────────────────────────────────────────
+// --- View Descriptor ---
 
-class AgentManagerViewDescriptor implements IViewDescriptor {
-	readonly id = AGENT_MANAGER_VIEW_ID;
-	readonly name: ILocalizedString = localize2('agentManagerView', 'Agent Tasks');
-	readonly containerIcon = agentManagerIcon;
-	readonly ctorDescriptor = new SyncDescriptor(AgentManagerViewPane);
+class AgentPanelViewDescriptor implements IViewDescriptor {
+	readonly id = AGENT_PANEL_VIEW_ID;
+	readonly name: ILocalizedString = localize2('aikosAgentPanel', 'Agent');
+	readonly containerIcon = agentPanelIcon;
+	readonly ctorDescriptor = new SyncDescriptor(AgentPanelViewPane);
 	readonly order = 1;
 	readonly canToggleVisibility = true;
 	readonly canMoveView = true;
 	readonly collapsed = false;
-
-	focusCommand = { id: 'workbench.action.focusAgentManager' };
+	readonly singleViewPaneContainerTitle = 'Agent';
 }
 
 const viewsRegistry = Registry.as<IViewsRegistry>(ViewExtensions.ViewsRegistry);
-viewsRegistry.registerViews([new AgentManagerViewDescriptor()], agentManagerViewContainer);
+viewsRegistry.registerViews([new AgentPanelViewDescriptor()], agentViewContainer);
 
-// ─── Service ──────────────────────────────────────────────────────────────
+// --- Service ---
 
 registerSingleton(IAgentManagerService, AgentManagerService, InstantiationType.Delayed);
 
-// ─── Actions ──────────────────────────────────────────────────────────────
+// --- Actions ---
 
-registerAction2(class ToggleAgentManagerAction extends Action2 {
+registerAction2(class ToggleAgentPanelAction extends Action2 {
 	constructor() {
 		super({
-			id: 'workbench.action.toggleAgentManager',
-			title: localize2('toggleAgentManager', 'Toggle Agent Manager'),
+			id: 'workbench.action.toggleAikosAgent',
+			title: localize2('toggleAikosAgent', 'Toggle AIKOS Agent'),
 			f1: true,
 			keybinding: {
 				primary: 2048 /* KeyMod.CtrlCmd */ | 1024 /* KeyMod.Shift */ | 50 /* KeyCode.KeyM */,
@@ -79,25 +78,37 @@ registerAction2(class ToggleAgentManagerAction extends Action2 {
 	}
 
 	async run(accessor: ServicesAccessor): Promise<void> {
-		const viewsService = accessor.get(IAgentManagerService);
-		// Toggle the agent manager panel
-		viewsService.togglePanel();
+		const agentService = accessor.get(IAgentManagerService);
+		agentService.togglePanel();
 	}
 });
 
-// ─── Workbench Contribution ───────────────────────────────────────────────
+registerAction2(class NewAgentAction extends Action2 {
+	constructor() {
+		super({
+			id: 'workbench.action.newAikosAgent',
+			title: localize2('newAikosAgent', 'New Agent'),
+			f1: true,
+		});
+	}
 
-class AgentManagerContribution extends Disposable implements IWorkbenchContribution {
-	static readonly ID = 'workbench.contrib.agentManager';
+	async run(accessor: ServicesAccessor): Promise<void> {
+		const agentService = accessor.get(IAgentManagerService);
+		agentService.newSession();
+	}
+});
+
+// --- Workbench Contribution ---
+
+class AgentPanelContribution extends Disposable implements IWorkbenchContribution {
+	static readonly ID = 'workbench.contrib.aikosAgent';
 
 	constructor(
 		@IInstantiationService _instantiationService: IInstantiationService,
 		@IAgentManagerService _agentManagerService: IAgentManagerService,
 	) {
 		super();
-		// Agent Manager contribution initialized
-		// Future: auto-connect to AIKOS WebSocket, poll tasks, etc.
 	}
 }
 
-registerWorkbenchContribution2(AgentManagerContribution.ID, AgentManagerContribution, WorkbenchPhase.AfterRestored);
+registerWorkbenchContribution2(AgentPanelContribution.ID, AgentPanelContribution, WorkbenchPhase.AfterRestored);

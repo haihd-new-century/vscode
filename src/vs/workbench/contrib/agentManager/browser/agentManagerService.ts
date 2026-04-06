@@ -6,35 +6,55 @@
 import { createDecorator } from '../../../../platform/instantiation/common/instantiation.js';
 import { Disposable } from '../../../../base/common/lifecycle.js';
 import { Emitter, Event } from '../../../../base/common/event.js';
-// ─── Types ────────────────────────────────────────────────────────────────
 
-export interface IAgentTask {
+// --- Types ---
+
+export type AgentMode = 'agent' | 'ask' | 'manual';
+
+export interface IAgentMessage {
 	id: string;
-	description: string;
-	status: 'pending' | 'running' | 'paused' | 'completed' | 'failed';
-	progress: number; // 0-100
-	currentStep?: string;
-	totalSteps?: number;
-	currentStepIndex?: number;
+	role: 'user' | 'assistant' | 'system';
+	content: string;
+	timestamp: number;
+	status?: 'pending' | 'streaming' | 'done' | 'error';
+	toolCalls?: { name: string; status: string }[];
+	filesChanged?: string[];
 	cost?: number;
 	tokens?: number;
+}
+
+export interface IAgentSession {
+	id: string;
+	title: string;
+	messages: IAgentMessage[];
+	mode: AgentMode;
+	provider: string;
+	model: string;
 	createdAt: number;
-	updatedAt: number;
-	changedFiles?: string[];
+	isActive: boolean;
 }
 
 export interface IAgentManagerService {
 	readonly _serviceBrand: undefined;
 
-	readonly onDidChangeTasks: Event<void>;
-	readonly onDidChangeActiveTask: Event<IAgentTask | undefined>;
+	readonly onDidChangeSession: Event<void>;
+	readonly onDidChangeMessages: Event<void>;
+	readonly onDidChangeMode: Event<AgentMode>;
+	readonly onDidChangeProvider: Event<string>;
 
-	getTasks(): IAgentTask[];
-	getActiveTask(): IAgentTask | undefined;
-	submitTask(description: string): Promise<IAgentTask>;
-	stopTask(taskId: string): Promise<void>;
-	resumeTask(taskId: string): Promise<void>;
-	rollbackTask(taskId: string): Promise<void>;
+	getSession(): IAgentSession | undefined;
+	getMessages(): IAgentMessage[];
+	getMode(): AgentMode;
+	getProvider(): string;
+	getAvailableProviders(): string[];
+	getAvailableModels(): string[];
+
+	newSession(): void;
+	setMode(mode: AgentMode): void;
+	setProvider(provider: string): void;
+	submitMessage(content: string): Promise<void>;
+	stopGeneration(): void;
+	clearSession(): void;
 
 	togglePanel(): void;
 	focusPanel(): void;
@@ -42,92 +62,153 @@ export interface IAgentManagerService {
 
 export const IAgentManagerService = createDecorator<IAgentManagerService>('agentManagerService');
 
-// ─── Implementation ──────────────────────────────────────────────────────
+// --- Implementation ---
 
 export class AgentManagerService extends Disposable implements IAgentManagerService {
 	declare readonly _serviceBrand: undefined;
 
-	private readonly _tasks: Map<string, IAgentTask> = new Map();
-	private _activeTaskId: string | undefined;
+	private _session: IAgentSession | undefined;
+	private _mode: AgentMode = 'agent';
+	private _provider = 'Local';
+	private _isGenerating = false;
 
-	private readonly _onDidChangeTasks = this._register(new Emitter<void>());
-	readonly onDidChangeTasks: Event<void> = this._onDidChangeTasks.event;
+	private readonly _onDidChangeSession = this._register(new Emitter<void>());
+	readonly onDidChangeSession: Event<void> = this._onDidChangeSession.event;
 
-	private readonly _onDidChangeActiveTask = this._register(new Emitter<IAgentTask | undefined>());
-	readonly onDidChangeActiveTask: Event<IAgentTask | undefined> = this._onDidChangeActiveTask.event;
+	private readonly _onDidChangeMessages = this._register(new Emitter<void>());
+	readonly onDidChangeMessages: Event<void> = this._onDidChangeMessages.event;
+
+	private readonly _onDidChangeMode = this._register(new Emitter<AgentMode>());
+	readonly onDidChangeMode: Event<AgentMode> = this._onDidChangeMode.event;
+
+	private readonly _onDidChangeProvider = this._register(new Emitter<string>());
+	readonly onDidChangeProvider: Event<string> = this._onDidChangeProvider.event;
 
 	constructor() {
 		super();
 	}
 
-	getTasks(): IAgentTask[] {
-		return Array.from(this._tasks.values()).sort((a, b) => b.updatedAt - a.updatedAt);
+	getSession(): IAgentSession | undefined {
+		return this._session;
 	}
 
-	getActiveTask(): IAgentTask | undefined {
-		if (!this._activeTaskId) return undefined;
-		return this._tasks.get(this._activeTaskId);
+	getMessages(): IAgentMessage[] {
+		return this._session?.messages ?? [];
 	}
 
-	async submitTask(description: string): Promise<IAgentTask> {
-		const task: IAgentTask = {
-			id: `task-${Date.now()}`,
-			description,
-			status: 'pending',
-			progress: 0,
+	getMode(): AgentMode {
+		return this._mode;
+	}
+
+	getProvider(): string {
+		return this._provider;
+	}
+
+	getAvailableProviders(): string[] {
+		return ['Local', 'AIKOS API', 'OpenAI', 'Anthropic'];
+	}
+
+	getAvailableModels(): string[] {
+		if (this._provider === 'Local') {
+			return ['Auto'];
+		}
+		return ['Auto', 'claude-sonnet-4-20250514', 'gpt-4o', 'claude-3-haiku'];
+	}
+
+	newSession(): void {
+		this._session = {
+			id: `session-${Date.now()}`,
+			title: 'New Agent',
+			messages: [],
+			mode: this._mode,
+			provider: this._provider,
+			model: 'Auto',
 			createdAt: Date.now(),
-			updatedAt: Date.now(),
+			isActive: true,
 		};
-
-		this._tasks.set(task.id, task);
-		this._activeTaskId = task.id;
-		this._onDidChangeTasks.fire();
-		this._onDidChangeActiveTask.fire(task);
-
-		// TODO: Connect to AIKOS API to submit task
-		// const response = await fetch(`${apiUrl}/tasks`, { method: 'POST', body: JSON.stringify({ description }) });
-
-		return task;
+		this._onDidChangeSession.fire();
+		this._onDidChangeMessages.fire();
 	}
 
-	async stopTask(taskId: string): Promise<void> {
-		const task = this._tasks.get(taskId);
-		if (task && (task.status === 'running' || task.status === 'pending')) {
-			task.status = 'paused';
-			task.updatedAt = Date.now();
-			this._onDidChangeTasks.fire();
-			// TODO: POST /tasks/{taskId}/stop
+	setMode(mode: AgentMode): void {
+		this._mode = mode;
+		if (this._session) {
+			this._session.mode = mode;
 		}
+		this._onDidChangeMode.fire(mode);
 	}
 
-	async resumeTask(taskId: string): Promise<void> {
-		const task = this._tasks.get(taskId);
-		if (task && task.status === 'paused') {
-			task.status = 'running';
-			task.updatedAt = Date.now();
-			this._onDidChangeTasks.fire();
-			// TODO: POST /tasks/{taskId}/resume
+	setProvider(provider: string): void {
+		this._provider = provider;
+		if (this._session) {
+			this._session.provider = provider;
 		}
+		this._onDidChangeProvider.fire(provider);
 	}
 
-	async rollbackTask(taskId: string): Promise<void> {
-		const task = this._tasks.get(taskId);
-		if (task) {
-			// TODO: POST /tasks/{taskId}/rollback
-			this._tasks.delete(taskId);
-			if (this._activeTaskId === taskId) {
-				this._activeTaskId = undefined;
-				this._onDidChangeActiveTask.fire(undefined);
+	async submitMessage(content: string): Promise<void> {
+		if (!this._session) {
+			this.newSession();
+		}
+
+		const userMsg: IAgentMessage = {
+			id: `msg-${Date.now()}`,
+			role: 'user',
+			content,
+			timestamp: Date.now(),
+			status: 'done',
+		};
+		this._session!.messages.push(userMsg);
+		this._onDidChangeMessages.fire();
+
+		// Create assistant response placeholder
+		const assistantMsg: IAgentMessage = {
+			id: `msg-${Date.now() + 1}`,
+			role: 'assistant',
+			content: '',
+			timestamp: Date.now(),
+			status: 'streaming',
+		};
+		this._session!.messages.push(assistantMsg);
+		this._isGenerating = true;
+		this._onDidChangeMessages.fire();
+
+		// TODO: Connect to AIKOS API for real response
+		// For now, simulate a response
+		await new Promise<void>(resolve => {
+			setTimeout(() => {
+				assistantMsg.content = `I'll help you with that. Let me analyze the request...\n\n**Mode:** ${this._mode}\n**Provider:** ${this._provider}\n\nThis is a placeholder response. Connect to AIKOS API to enable real agent capabilities.`;
+				assistantMsg.status = 'done';
+				this._isGenerating = false;
+				this._onDidChangeMessages.fire();
+				resolve();
+			}, 1000);
+		});
+	}
+
+	stopGeneration(): void {
+		if (this._isGenerating && this._session) {
+			const lastMsg = this._session.messages[this._session.messages.length - 1];
+			if (lastMsg && lastMsg.status === 'streaming') {
+				lastMsg.status = 'done';
+				lastMsg.content += '\n\n*[Generation stopped]*';
 			}
-			this._onDidChangeTasks.fire();
+			this._isGenerating = false;
+			this._onDidChangeMessages.fire();
 		}
+	}
+
+	clearSession(): void {
+		this._session = undefined;
+		this._onDidChangeSession.fire();
+		this._onDidChangeMessages.fire();
 	}
 
 	togglePanel(): void {
-		// TODO: Toggle panel visibility via IViewsService
+		// Handled by view service externally
 	}
 
 	focusPanel(): void {
-		// TODO: Focus the agent manager panel
+		// Handled by view service externally
 	}
 }
