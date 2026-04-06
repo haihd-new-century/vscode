@@ -1,0 +1,346 @@
+{
+  "name": "aikos-core",
+  "displayName": "AIKOS AI — Knowledge OS",
+  "description": "Full AI operating system: multi-agent orchestration, RAG knowledge base, approval workflow, code completion, training pipeline",
+  "version": "0.1.0",
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "AI",
+    "Machine Learning",
+    "Programming Languages"
+  ],
+  "main": "./out/extension",
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "enabledApiProposals": [],
+  "contributes": {
+    "viewsContainers": {},
+    "views": {},
+    "commands": [
+      {
+        "command": "aikos.chat.ask",
+        "title": "AIKOS: Ask AI",
+        "icon": "$(comment-discussion)"
+      },
+      {
+        "command": "aikos.chat.explain",
+        "title": "AIKOS: Explain Selection"
+      },
+      {
+        "command": "aikos.chat.review",
+        "title": "AIKOS: Review Selection"
+      },
+      {
+        "command": "aikos.chat.fix",
+        "title": "AIKOS: Fix This"
+      },
+      {
+        "command": "aikos.chat.test",
+        "title": "AIKOS: Generate Test"
+      },
+      {
+        "command": "aikos.chat.refactor",
+        "title": "AIKOS: Refactor Selection"
+      },
+      {
+        "command": "aikos.search.knowledge",
+        "title": "AIKOS: Search Knowledge Base",
+        "icon": "$(search)"
+      },
+      {
+        "command": "aikos.task.submit",
+        "title": "AIKOS: Submit Task",
+        "icon": "$(add)"
+      },
+      {
+        "command": "aikos.task.list",
+        "title": "AIKOS: View Tasks"
+      },
+      {
+        "command": "aikos.task.stop",
+        "title": "AIKOS: Stop Task"
+      },
+      {
+        "command": "aikos.task.resume",
+        "title": "AIKOS: Resume Task"
+      },
+      {
+        "command": "aikos.task.detail",
+        "title": "AIKOS: View Task Detail"
+      },
+      {
+        "command": "aikos.task.rollback",
+        "title": "AIKOS: Rollback Task"
+      },
+      {
+        "command": "aikos.approval.list",
+        "title": "AIKOS: View Approvals"
+      },
+      {
+        "command": "aikos.approval.approve",
+        "title": "AIKOS: Approve Action",
+        "icon": "$(check)"
+      },
+      {
+        "command": "aikos.approval.reject",
+        "title": "AIKOS: Reject Action",
+        "icon": "$(close)"
+      },
+      {
+        "command": "aikos.approval.detail",
+        "title": "AIKOS: Approval Detail"
+      },
+      {
+        "command": "aikos.collections.addFile",
+        "title": "AIKOS: Add to Collection"
+      },
+      {
+        "command": "aikos.nl2sql",
+        "title": "AIKOS: NL-to-SQL Query"
+      },
+      {
+        "command": "aikos.metrics",
+        "title": "AIKOS: View Metrics"
+      },
+      {
+        "command": "aikos.audit",
+        "title": "AIKOS: View Audit Timeline"
+      },
+      {
+        "command": "aikos.workflows",
+        "title": "AIKOS: Run Workflow"
+      },
+      {
+        "command": "aikos.settings",
+        "title": "AIKOS: Open Settings"
+      },
+      {
+        "command": "aikos.completion.trigger",
+        "title": "AIKOS: Trigger Completion"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "aikos.chat.ask",
+        "key": "ctrl+shift+a",
+        "mac": "cmd+shift+a"
+      },
+      {
+        "command": "aikos.chat.explain",
+        "key": "ctrl+shift+e",
+        "mac": "cmd+shift+e",
+        "when": "editorHasSelection"
+      },
+      {
+        "command": "aikos.search.knowledge",
+        "key": "ctrl+shift+k",
+        "mac": "cmd+shift+k"
+      },
+      {
+        "command": "aikos.task.submit",
+        "key": "ctrl+shift+t",
+        "mac": "cmd+shift+t"
+      },
+      {
+        "command": "aikos.chat.fix",
+        "key": "ctrl+shift+f",
+        "mac": "cmd+shift+f",
+        "when": "editorHasSelection"
+      },
+      {
+        "command": "aikos.nl2sql",
+        "key": "ctrl+shift+q",
+        "mac": "cmd+shift+q"
+      }
+    ],
+    "menus": {
+      "editor/context": [
+        {
+          "command": "aikos.chat.explain",
+          "group": "aikos@1",
+          "when": "editorHasSelection"
+        },
+        {
+          "command": "aikos.chat.review",
+          "group": "aikos@2",
+          "when": "editorHasSelection"
+        },
+        {
+          "command": "aikos.chat.fix",
+          "group": "aikos@3",
+          "when": "editorHasSelection"
+        },
+        {
+          "command": "aikos.chat.test",
+          "group": "aikos@4",
+          "when": "editorHasSelection"
+        },
+        {
+          "command": "aikos.chat.refactor",
+          "group": "aikos@5",
+          "when": "editorHasSelection"
+        }
+      ],
+      "explorer/context": [
+        {
+          "command": "aikos.collections.addFile",
+          "group": "aikos@1"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "aikos.task.stop",
+          "when": "view == aikos.tasks && viewItem == running",
+          "group": "inline"
+        },
+        {
+          "command": "aikos.task.resume",
+          "when": "view == aikos.tasks && viewItem == paused",
+          "group": "inline"
+        },
+        {
+          "command": "aikos.approval.approve",
+          "when": "view == aikos.approvals && viewItem == pending",
+          "group": "inline@1"
+        },
+        {
+          "command": "aikos.approval.reject",
+          "when": "view == aikos.approvals && viewItem == pending",
+          "group": "inline@2"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "AIKOS AI",
+      "properties": {
+        "aikos.apiUrl": {
+          "type": "string",
+          "default": "http://localhost:3001/api/v1",
+          "description": "AIKOS API base URL"
+        },
+        "aikos.agentServiceUrl": {
+          "type": "string",
+          "default": "http://localhost:8100",
+          "description": "Agent Service base URL"
+        },
+        "aikos.defaultCollection": {
+          "type": "string",
+          "default": "",
+          "description": "Default collection ID for RAG queries"
+        },
+        "aikos.defaultModel": {
+          "type": "string",
+          "default": "",
+          "description": "Default LLM model ID"
+        },
+        "aikos.enableCompletion": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable inline code completion (ghost text)"
+        },
+        "aikos.enableCodeLens": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show CodeLens actions (Explain, Test, Review) on functions"
+        },
+        "aikos.enableDiagnostics": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enable AI-powered diagnostics on save (experimental)"
+        },
+        "aikos.completionDebounce": {
+          "type": "number",
+          "default": 500,
+          "minimum": 200,
+          "maximum": 2000,
+          "description": "Debounce delay for code completions (ms)"
+        },
+        "aikos.maxContextTokens": {
+          "type": "number",
+          "default": 4000,
+          "minimum": 1000,
+          "maximum": 16000,
+          "description": "Maximum RAG context tokens for completions"
+        },
+        "aikos.autoApprove.safe": {
+          "type": "boolean",
+          "default": true,
+          "description": "Auto-approve SAFE risk level actions"
+        },
+        "aikos.autoApprove.low": {
+          "type": "boolean",
+          "default": true,
+          "description": "Auto-approve LOW risk level actions"
+        },
+        "aikos.notifications.approval": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show notifications for pending approvals"
+        },
+        "aikos.language": {
+          "type": "string",
+          "enum": ["en", "vi"],
+          "default": "en",
+          "description": "Extension UI language"
+        }
+      }
+    },
+    "walkthroughs": [
+      {
+        "id": "aikos.setup",
+        "title": "Get Started with AIKOS AI",
+        "description": "Set up your AI Knowledge OS integration",
+        "steps": [
+          {
+            "id": "connect",
+            "title": "Connect to AIKOS API",
+            "description": "Run **AIKOS: Open Settings** to enter your API key.",
+            "media": {
+              "markdown": "media/walkthrough/connect.md"
+            },
+            "completionEvents": [
+              "onCommand:aikos.settings"
+            ]
+          },
+          {
+            "id": "collection",
+            "title": "Select a collection",
+            "description": "Choose a knowledge base collection for RAG queries.",
+            "media": {
+              "markdown": "media/walkthrough/collection.md"
+            }
+          },
+          {
+            "id": "ask",
+            "title": "Ask your first question",
+            "description": "Press **Ctrl+Shift+A** to open chat and ask a question.",
+            "media": {
+              "markdown": "media/walkthrough/ask.md"
+            },
+            "completionEvents": [
+              "onCommand:aikos.chat.ask"
+            ]
+          },
+          {
+            "id": "tasks",
+            "title": "Submit an agent task",
+            "description": "Press **Ctrl+Shift+T** to submit a task for the multi-agent pipeline.",
+            "media": {
+              "markdown": "media/walkthrough/tasks.md"
+            },
+            "completionEvents": [
+              "onCommand:aikos.task.submit"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "dependencies": {
+    "socket.io-client": "^4.8.0"
+  }
+}

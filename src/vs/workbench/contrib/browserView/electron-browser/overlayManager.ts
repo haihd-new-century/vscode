@@ -20,11 +20,13 @@ export enum BrowserOverlayType {
 
 const OVERLAY_DEFINITIONS: ReadonlyArray<{ className: string; type: BrowserOverlayType }> = [
 	{ className: 'monaco-menu-container', type: BrowserOverlayType.Menu },
+	{ className: 'action-list-submenu-panel', type: BrowserOverlayType.Menu },
 	{ className: 'quick-input-widget', type: BrowserOverlayType.QuickInput },
 	{ className: 'monaco-hover', type: BrowserOverlayType.Hover },
 	{ className: 'editor-widget', type: BrowserOverlayType.Hover },
 	{ className: 'suggest-details-container', type: BrowserOverlayType.Hover },
 	{ className: 'monaco-dialog-modal-block', type: BrowserOverlayType.Dialog },
+	{ className: 'monaco-modal-editor-block', type: BrowserOverlayType.Dialog },
 	{ className: 'notifications-center', type: BrowserOverlayType.Notification },
 	{ className: 'notification-toast-container', type: BrowserOverlayType.Notification },
 	// Context view is very generic, so treat the content as unknown
@@ -243,6 +245,11 @@ export class BrowserOverlayManager extends Disposable implements IBrowserOverlay
 
 		// Check against all precomputed overlay rectangles
 		for (const overlay of this.overlays()) {
+			// Skip overlays that are ancestors of the target element,
+			// e.g., the modal editor backdrop when the browser is inside the modal
+			if (overlay.element.contains(element)) {
+				continue;
+			}
 			const overlayRect = this.getRect(overlay.element);
 			if (overlayRect && this.isRectanglesOverlapping(elementRect, overlayRect)) {
 				overlappingOverlays.push({
