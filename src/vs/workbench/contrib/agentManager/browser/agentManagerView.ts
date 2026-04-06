@@ -469,6 +469,11 @@ export class AgentPanelViewPane extends ViewPane {
 				min-height: 20px;
 				max-height: 200px;
 				line-height: 1.4;
+				overflow: hidden;
+				scrollbar-width: none;
+			}
+			.aikos-agent-input::-webkit-scrollbar {
+				display: none;
 			}
 			.aikos-agent-input::placeholder {
 				color: var(--vscode-input-placeholderForeground);
