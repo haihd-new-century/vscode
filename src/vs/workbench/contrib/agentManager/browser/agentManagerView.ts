@@ -285,7 +285,8 @@ export class AgentPanelViewPane extends ViewPane {
 	}
 
 	private _injectStyles(container: HTMLElement): void {
-		const style = dom.createStyleSheet(container);
+		const style = document.createElement('style');
+		container.appendChild(style);
 		style.textContent = `
 			.aikos-agent-panel {
 				display: flex;

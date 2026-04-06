@@ -18,44 +18,8 @@
   ],
   "enabledApiProposals": [],
   "contributes": {
-    "viewsContainers": {
-      "activitybar": [
-        {
-          "id": "aikos",
-          "title": "AIKOS AI",
-          "icon": "media/icon.svg"
-        }
-      ]
-    },
-    "views": {
-      "aikos": [
-        {
-          "id": "aikos.chat",
-          "name": "Chat",
-          "type": "webview"
-        },
-        {
-          "id": "aikos.tasks",
-          "name": "Tasks"
-        },
-        {
-          "id": "aikos.approvals",
-          "name": "Approvals"
-        },
-        {
-          "id": "aikos.collections",
-          "name": "Collections"
-        },
-        {
-          "id": "aikos.search",
-          "name": "Search"
-        },
-        {
-          "id": "aikos.memory",
-          "name": "Memory"
-        }
-      ]
-    },
+    "viewsContainers": {},
+    "views": {},
     "commands": [
       {
         "command": "aikos.chat.ask",
