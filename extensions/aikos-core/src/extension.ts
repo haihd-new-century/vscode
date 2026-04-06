@@ -5,13 +5,7 @@ import { AikosWebSocket } from './core/websocket';
 import { AikosState } from './core/state';
 import { eventBus } from './core/event-bus';
 import { logInfo, logError, logWarn, disposeLogger } from './core/logger';
-import { COMMANDS, DEFAULTS, VIEW_IDS } from './constants';
-import { ChatViewProvider } from './features/chat/chat-provider';
-import { registerTasksView, TasksTreeProvider } from './features/tasks/tasks-provider';
-import { registerApprovalView, ApprovalTreeProvider } from './features/approval/approval-provider';
-import { registerCollectionsView, CollectionsTreeProvider } from './features/collections/collections-provider';
-import { registerSearchView, SearchTreeProvider } from './features/search/search-provider';
-import { registerMemoryView } from './features/memory/memory-provider';
+import { COMMANDS, DEFAULTS } from './constants';
 import { AikosStatusBar } from './features/metrics/status-bar';
 import { registerCompletionProvider } from './features/completion/completion-provider';
 import { registerCodeLensProvider } from './features/codelens/codelens-provider';
@@ -34,11 +28,6 @@ let ws: AikosWebSocket;
 let state: AikosState;
 let aikosStatusBar: AikosStatusBar;
 let healthCheckTimer: ReturnType<typeof setInterval> | undefined;
-let chatProvider: ChatViewProvider;
-let tasksProvider: TasksTreeProvider;
-let approvalProvider: ApprovalTreeProvider;
-let collectionsProvider: CollectionsTreeProvider;
-let searchProvider: SearchTreeProvider;
 let nl2sqlPanel: NL2SQLPanel;
 let agentViewer: AgentStreamViewer;
 let metricsPanel: MetricsPanel;
@@ -59,18 +48,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
   // 2. Register commands
   registerCommands(context);
 
-  // 3. Register views
-  chatProvider = new ChatViewProvider(context.extensionUri, apiClient, state);
-  context.subscriptions.push(
-    vscode.window.registerWebviewViewProvider(ChatViewProvider.viewType, chatProvider),
-  );
-  tasksProvider = registerTasksView(context, apiClient);
-  approvalProvider = registerApprovalView(context, apiClient);
-  collectionsProvider = registerCollectionsView(context, apiClient, state);
-  searchProvider = registerSearchView(context, apiClient, state);
-  registerMemoryView(context, apiClient);
-
-  // 3b. Register editor providers
+  // 3. Register editor providers (sidebar views removed — handled by workbench Agent Panel)
   registerCompletionProvider(context, apiClient, config);
   registerCodeLensProvider(context, config);
   registerDiagnosticsProvider(context, apiClient, config);
