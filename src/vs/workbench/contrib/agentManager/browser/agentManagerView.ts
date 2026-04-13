@@ -70,10 +70,10 @@ export class AgentPanelViewPane extends ViewPane {
 
 		// --- Input area (bottom) ---
 		const inputArea = dom.append(container, dom.$('.aikos-agent-input-area'));
+		const inputBox = dom.append(inputArea, dom.$('.aikos-agent-input-box'));
 
-		// Text input
-		const inputWrapper = dom.append(inputArea, dom.$('.aikos-agent-input-wrapper'));
-		this._inputElement = dom.append(inputWrapper, dom.$('textarea.aikos-agent-input')) as HTMLTextAreaElement;
+		// Text input (full width, top of the box)
+		this._inputElement = dom.append(inputBox, dom.$('textarea.aikos-agent-input')) as HTMLTextAreaElement;
 		this._inputElement.placeholder = localize('agentPlaceholder', 'Plan, Build, / for commands, @ for context');
 		this._inputElement.rows = 1;
 
@@ -93,16 +93,13 @@ export class AgentPanelViewPane extends ViewPane {
 			}
 		}));
 
-		// Submit button
-		const submitBtn = dom.append(inputWrapper, dom.$('.aikos-agent-submit-btn'));
-		submitBtn.textContent = '\u2191'; // up arrow
-		submitBtn.title = localize('submit', 'Submit (Enter)');
-		this._register(dom.addDisposableListener(submitBtn, 'click', () => {
-			this._submitInput();
-		}));
+		// --- Bottom controls row: + | Mode | spacer | Provider | Submit ---
+		const controls = dom.append(inputBox, dom.$('.aikos-agent-controls'));
 
-		// --- Controls row: Mode + Provider ---
-		const controls = dom.append(inputArea, dom.$('.aikos-agent-controls'));
+		// "+" attach/menu button (left)
+		const plusBtn = dom.append(controls, dom.$('.aikos-agent-plus-btn'));
+		plusBtn.textContent = '+';
+		plusBtn.title = localize('attach', 'Attach context');
 
 		// Mode selector (Agent / Ask / Manual)
 		this._modeButton = dom.append(controls, dom.$('.aikos-agent-mode-btn'));
@@ -111,7 +108,7 @@ export class AgentPanelViewPane extends ViewPane {
 			this._showModeMenu(e);
 		}));
 
-		// Spacer
+		// Spacer pushes provider + submit to the right
 		dom.append(controls, dom.$('.aikos-agent-spacer'));
 
 		// Provider selector (Local / AIKOS API / ...)
@@ -119,6 +116,14 @@ export class AgentPanelViewPane extends ViewPane {
 		this._updateProviderButton();
 		this._register(dom.addDisposableListener(this._providerButton, 'click', (e: MouseEvent) => {
 			this._showProviderMenu(e);
+		}));
+
+		// Submit button (rightmost)
+		const submitBtn = dom.append(controls, dom.$('.aikos-agent-submit-btn'));
+		submitBtn.textContent = '\u2191'; // up arrow
+		submitBtn.title = localize('submit', 'Submit (Enter)');
+		this._register(dom.addDisposableListener(submitBtn, 'click', () => {
+			this._submitInput();
 		}));
 	}
 
@@ -331,6 +336,13 @@ export class AgentPanelViewPane extends ViewPane {
 				flex: 1;
 				overflow-y: auto;
 				padding: 12px;
+				scrollbar-width: none;          /* Firefox */
+				-ms-overflow-style: none;       /* IE/Edge legacy */
+			}
+			.aikos-agent-messages::-webkit-scrollbar {
+				display: none;                  /* Chromium/WebKit */
+				width: 0;
+				height: 0;
 			}
 
 			/* Empty state */
@@ -439,34 +451,37 @@ export class AgentPanelViewPane extends ViewPane {
 				40% { opacity: 0.8; transform: scale(1); }
 			}
 
-			/* Input area */
+			/* Input area — single rounded box, textarea on top, controls on bottom */
 			.aikos-agent-input-area {
 				padding: 8px 12px 12px;
 				border-top: 1px solid var(--vscode-panel-border, var(--vscode-widget-border));
 			}
-			.aikos-agent-input-wrapper {
+			.aikos-agent-input-box {
 				display: flex;
-				align-items: flex-end;
+				flex-direction: column;
 				background: var(--vscode-input-background);
 				border: 1px solid var(--vscode-input-border, var(--vscode-widget-border));
-				border-radius: 8px;
-				padding: 4px;
+				border-radius: 10px;
+				padding: 8px 10px;
 				transition: border-color 0.15s;
 			}
-			.aikos-agent-input-wrapper:focus-within {
+			.aikos-agent-input-box:focus-within {
 				border-color: var(--vscode-focusBorder);
 			}
-			.aikos-agent-input {
-				flex: 1;
+			.aikos-agent-input,
+			.aikos-agent-input:focus,
+			.aikos-agent-input:focus-visible {
+				width: 100%;
 				background: transparent;
-				border: none;
-				outline: none;
+				border: none !important;
+				outline: none !important;
+				box-shadow: none !important;
 				color: var(--vscode-input-foreground);
 				font-family: var(--vscode-font-family);
 				font-size: 13px;
-				padding: 6px 8px;
+				padding: 2px 0 6px 0;
 				resize: none;
-				min-height: 20px;
+				min-height: 22px;
 				max-height: 200px;
 				line-height: 1.4;
 				overflow: hidden;
@@ -478,35 +493,37 @@ export class AgentPanelViewPane extends ViewPane {
 			.aikos-agent-input::placeholder {
 				color: var(--vscode-input-placeholderForeground);
 			}
-			.aikos-agent-submit-btn {
-				width: 28px;
-				height: 28px;
+
+			/* Bottom controls row inside the input box */
+			.aikos-agent-controls {
+				display: flex;
+				align-items: center;
+				gap: 6px;
+				margin-top: 4px;
+			}
+			.aikos-agent-spacer {
+				flex: 1;
+			}
+			.aikos-agent-plus-btn {
+				width: 24px;
+				height: 24px;
 				display: flex;
 				align-items: center;
 				justify-content: center;
 				border-radius: 6px;
 				cursor: pointer;
-				font-size: 14px;
-				font-weight: bold;
-				color: var(--vscode-button-foreground);
-				background: var(--vscode-button-background);
-				border: none;
+				font-size: 16px;
+				line-height: 1;
+				color: var(--vscode-descriptionForeground);
+				background: transparent;
+				border: 1px solid transparent;
 				flex-shrink: 0;
-				transition: background 0.15s;
+				transition: all 0.15s;
 			}
-			.aikos-agent-submit-btn:hover {
-				background: var(--vscode-button-hoverBackground);
-			}
-
-			/* Controls row */
-			.aikos-agent-controls {
-				display: flex;
-				align-items: center;
-				margin-top: 6px;
-				gap: 6px;
-			}
-			.aikos-agent-spacer {
-				flex: 1;
+			.aikos-agent-plus-btn:hover {
+				background: var(--vscode-toolbar-hoverBackground);
+				border-color: var(--vscode-widget-border);
+				color: var(--vscode-foreground);
 			}
 			.aikos-agent-mode-btn,
 			.aikos-agent-provider-btn {
@@ -514,7 +531,7 @@ export class AgentPanelViewPane extends ViewPane {
 				align-items: center;
 				gap: 4px;
 				padding: 3px 8px;
-				border-radius: 4px;
+				border-radius: 6px;
 				cursor: pointer;
 				font-size: 12px;
 				color: var(--vscode-descriptionForeground);
@@ -534,6 +551,25 @@ export class AgentPanelViewPane extends ViewPane {
 			.aikos-mode-icon,
 			.aikos-provider-icon {
 				font-size: 13px;
+			}
+			.aikos-agent-submit-btn {
+				width: 26px;
+				height: 26px;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				border-radius: 6px;
+				cursor: pointer;
+				font-size: 14px;
+				font-weight: bold;
+				color: var(--vscode-button-foreground);
+				background: var(--vscode-button-background);
+				border: none;
+				flex-shrink: 0;
+				transition: background 0.15s;
+			}
+			.aikos-agent-submit-btn:hover {
+				background: var(--vscode-button-hoverBackground);
 			}
 		`;
 	}
