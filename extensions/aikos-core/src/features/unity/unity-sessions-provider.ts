@@ -12,7 +12,6 @@
 // ----------------------------------------------------------------------------
 
 import * as vscode from 'vscode';
-import { VIEW_IDS } from '../../constants';
 import { UnityExtensionClient } from './unity-client';
 import { UnitySessionState } from './unity-state';
 import { UnitySessionInfo } from './unity-types';
