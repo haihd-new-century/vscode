@@ -442,4 +442,7 @@ import './contrib/editTelemetry/browser/editTelemetry.contribution.js';
 // Opener
 import './contrib/opener/browser/opener.contribution.js';
 
+// AIKOS-FORK: Agent Manager native view
+import './contrib/agentManager/browser/agentManager.contribution.js';
+
 //#endregion

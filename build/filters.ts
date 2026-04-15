@@ -25,6 +25,7 @@ export const all = Object.freeze<string[]>([
 	'!cli/**/*',
 	'!out*/**',
 	'!extensions/**/out*/**',
+	'!extensions/aikos-core/**',
 	'!test/**/out/**',
 	'!**/node_modules/**',
 	'!**/*.js.map',
