@@ -10,9 +10,35 @@ import fancyLog from 'fancy-log';
 import * as path from 'path';
 
 const root = path.dirname(path.dirname(import.meta.dirname));
-const npx = process.platform === 'win32' ? 'npx.cmd' : 'npx';
+const tsgoBin = process.platform === 'win32'
+	? path.join(root, 'node_modules', '.bin', 'tsgo.cmd')
+	: path.join(root, 'node_modules', '.bin', 'tsgo');
 const ansiRegex = /[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g;
 const timestampRegex = /^\[\d{2}:\d{2}:\d{2}\]\s*/;
+
+// Limit concurrent tsgo spawns — the native Go compiler deadlocks/crashes under
+// high parallelism on Windows (observed with 40+ concurrent extension compiles).
+const MAX_CONCURRENT_TSGO = Number(process.env.TSGO_MAX_CONCURRENT) || 4;
+let tsgoActive = 0;
+const tsgoQueue: Array<() => void> = [];
+function acquireTsgoSlot(): Promise<void> {
+	return new Promise(resolve => {
+		const tryAcquire = () => {
+			if (tsgoActive < MAX_CONCURRENT_TSGO) {
+				tsgoActive++;
+				resolve();
+			} else {
+				tsgoQueue.push(tryAcquire);
+			}
+		};
+		tryAcquire();
+	});
+}
+function releaseTsgoSlot(): void {
+	tsgoActive--;
+	const next = tsgoQueue.shift();
+	if (next) { next(); }
+}
 
 export function spawnTsgo(projectPath: string, config: { taskName: string; noEmit?: boolean }, onComplete?: () => Promise<void> | void): Promise<void> {
 	function runReporter(output: string) {
@@ -26,30 +52,32 @@ export function spawnTsgo(projectPath: string, config: { taskName: string; noEmi
 		}
 	}
 
-	const args = ['tsgo', '--project', projectPath, '--pretty', 'false'];
+	const args = ['--project', projectPath, '--pretty', 'false'];
 	if (config.noEmit) {
 		args.push('--noEmit');
 	} else {
 		args.push('--sourceMap', '--inlineSources');
 	}
-	const child = cp.spawn(npx, args, {
-		cwd: root,
-		stdio: ['ignore', 'pipe', 'pipe'],
-		shell: true
-	});
 
-	let stdoutData = '';
-	let stderrData = '';
+	return acquireTsgoSlot().then(() => new Promise<void>((resolve, reject) => {
+		const child = cp.spawn(tsgoBin, args, {
+			cwd: root,
+			stdio: ['ignore', 'pipe', 'pipe'],
+			shell: true
+		});
 
-	child.stdout?.on('data', (data: Buffer) => {
-		stdoutData += data.toString();
-	});
-	child.stderr?.on('data', (data: Buffer) => {
-		stderrData += data.toString();
-	});
+		let stdoutData = '';
+		let stderrData = '';
 
-	return new Promise<void>((resolve, reject) => {
+		child.stdout?.on('data', (data: Buffer) => {
+			stdoutData += data.toString();
+		});
+		child.stderr?.on('data', (data: Buffer) => {
+			stderrData += data.toString();
+		});
+
 		child.on('exit', code => {
+			releaseTsgoSlot();
 			const allOutput = stdoutData + '\n' + stderrData;
 			const lines = allOutput
 				.split(/\r?\n/)
@@ -63,14 +91,16 @@ export function spawnTsgo(projectPath: string, config: { taskName: string; noEmi
 			if (code === 0) {
 				Promise.resolve(onComplete?.()).then(() => resolve(), reject);
 			} else {
-				reject(new Error(`tsgo exited with code ${code ?? 'unknown'}`));
+				fancyLog(`${ansiColors.red('tsgo FULL OUTPUT for')} ${projectPath}:\n${allOutput}`);
+				reject(new Error(`tsgo exited with code ${code ?? 'unknown'} (project: ${projectPath})`));
 			}
 		});
 
 		child.on('error', err => {
+			releaseTsgoSlot();
 			reject(err);
 		});
-	});
+	}));
 }
 
 export function createTsgoStream(projectPath: string, config: { taskName: string; noEmit?: boolean }, onComplete?: () => Promise<void> | void): NodeJS.ReadWriteStream {

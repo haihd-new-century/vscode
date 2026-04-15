@@ -1,8 +1,3 @@
-/*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
- *  Licensed under the MIT License. See License.txt in the project root for license information.
- *--------------------------------------------------------------------------------------------*/
-
 // ----------------------------------------------------------------------------
 //  Unity REST client used by the VS Code extension sidebar.
 //  Wraps the AIKOS API endpoints exposed by apps/api/src/modules/unity.

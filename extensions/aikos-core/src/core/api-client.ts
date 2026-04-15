@@ -1,8 +1,3 @@
-/*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
- *  Licensed under the MIT License. See License.txt in the project root for license information.
- *--------------------------------------------------------------------------------------------*/
-
 import { AikosConfig } from './config';
 import { logInfo, logError, logDebug, logWarn } from './logger';
 import { DEFAULTS } from '../constants';
@@ -73,13 +68,8 @@ export class AikosApiClient {
   // ─── REST Methods ────────────────────────────────────────────────────
 
   async get<T>(path: string, params?: Record<string, string>): Promise<T> {
-    const url = new URL(path, this.config.apiUrl);
-    if (params) {
-      for (const [k, v] of Object.entries(params)) {
-        url.searchParams.set(k, v);
-      }
-    }
-    return this.request<T>('GET', url.toString());
+    const url = joinUrl(this.config.apiUrl, path, params);
+    return this.request<T>('GET', url);
   }
 
   async post<T>(path: string, body?: unknown): Promise<T> {
@@ -101,13 +91,8 @@ export class AikosApiClient {
   }
 
   async agentGet<T>(path: string, params?: Record<string, string>): Promise<T> {
-    const url = new URL(path, this.config.agentServiceUrl);
-    if (params) {
-      for (const [k, v] of Object.entries(params)) {
-        url.searchParams.set(k, v);
-      }
-    }
-    return this.request<T>('GET', url.toString());
+    const url = joinUrl(this.config.agentServiceUrl, path, params);
+    return this.request<T>('GET', url);
   }
 
   // ─── SSE Streaming ───────────────────────────────────────────────────
@@ -135,13 +120,13 @@ export class AikosApiClient {
     model?: string;
     enableReasoning?: boolean;
   }): AsyncGenerator<AgentSSEEvent> {
-    const url = new URL('/agent/stream', this.config.apiUrl);
-    url.searchParams.set('query', params.query);
-    if (params.collectionId) url.searchParams.set('collection_id', params.collectionId);
-    if (params.model) url.searchParams.set('model', params.model);
-    if (params.enableReasoning) url.searchParams.set('enable_reasoning', 'true');
+    const q: Record<string, string> = { query: params.query };
+    if (params.collectionId) q.collection_id = params.collectionId;
+    if (params.model) q.model = params.model;
+    if (params.enableReasoning) q.enable_reasoning = 'true';
+    const url = joinUrl(this.config.apiUrl, '/agent/stream', q);
 
-    yield* this.sseStream<AgentSSEEvent>(url.toString(), 'GET');
+    yield* this.sseStream<AgentSSEEvent>(url, 'GET');
   }
 
   // ─── Health ──────────────────────────────────────────────────────────
@@ -269,4 +254,16 @@ export class AikosApiClient {
   private sleep(ms: number): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
+}
+
+/**
+ * Join a base URL (e.g. `http://host:3001/api/v1`) with a path (e.g. `/metrics/system`)
+ * and optional query params, preserving the base path segment. `new URL(path, base)`
+ * treats a leading-slash path as root-relative and would drop `/api/v1`.
+ */
+function joinUrl(base: string, path: string, params?: Record<string, string>): string {
+  const b = base.replace(/\/+$/, '');
+  const p = path.startsWith('/') ? path : `/${path}`;
+  const qs = params ? `?${new URLSearchParams(params).toString()}` : '';
+  return `${b}${p}${qs}`;
 }

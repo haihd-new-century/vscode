@@ -33,6 +33,39 @@ const root = path.dirname(path.dirname(import.meta.dirname));
 // const commit = getVersion(root);
 // const sourceMappingURLBase = `https://main.vscode-cdn.net/sourcemaps/${commit}`;
 
+// Limit concurrent vsce.listFiles invocations — vsce spawns `npm` per extension
+// to resolve deps, and Windows exhausts subprocess handles when all ~40 extensions
+// run in parallel (observed: "Error: spawn UNKNOWN" from @vscode/vsce/out/npm.js).
+const MAX_CONCURRENT_VSCE = Number(process.env.VSCE_LISTFILES_MAX_CONCURRENT) || 4;
+let vsceActive = 0;
+const vsceQueue: Array<() => void> = [];
+function acquireVsceSlot(): Promise<void> {
+	return new Promise(resolve => {
+		const tryAcquire = () => {
+			if (vsceActive < MAX_CONCURRENT_VSCE) {
+				vsceActive++;
+				resolve();
+			} else {
+				vsceQueue.push(tryAcquire);
+			}
+		};
+		tryAcquire();
+	});
+}
+function releaseVsceSlot(): void {
+	vsceActive--;
+	const next = vsceQueue.shift();
+	if (next) { next(); }
+}
+async function vsceListFilesLimited(vsce: typeof import('@vscode/vsce'), opts: Parameters<typeof import('@vscode/vsce').listFiles>[0]): Promise<string[]> {
+	await acquireVsceSlot();
+	try {
+		return await vsce.listFiles(opts);
+	} finally {
+		releaseVsceSlot();
+	}
+}
+
 function minifyExtensionResources(input: Stream): Stream {
 	const jsonFilter = filter(['**/*.json', '**/*.code-snippets'], { restore: true });
 	return input
@@ -117,7 +150,7 @@ function fromLocalNormal(extensionPath: string): Stream {
 	const vsce = require('@vscode/vsce') as typeof import('@vscode/vsce');
 	const result = es.through();
 
-	vsce.listFiles({ cwd: extensionPath, packageManager: vsce.PackageManager.Npm })
+	vsceListFilesLimited(vsce, { cwd: extensionPath, packageManager: vsce.PackageManager.Npm })
 		.then(fileNames => {
 			const files = fileNames
 				.map(fileName => path.join(extensionPath, fileName))
@@ -169,7 +202,7 @@ function fromLocalEsbuild(extensionPath: string, esbuildConfigFileName: string):
 		});
 	}).then(() => {
 		// After esbuild completes, collect all files using vsce
-		return vsce.listFiles({ cwd: extensionPath, packageManager: vsce.PackageManager.None });
+		return vsceListFilesLimited(vsce, { cwd: extensionPath, packageManager: vsce.PackageManager.None });
 	}).then(fileNames => {
 		if (packagedDependencies.length > 0) {
 			const packagedDependencyFileNames = packagedDependencies.flatMap(dependency =>

@@ -1,8 +1,3 @@
-/*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
- *  Licensed under the MIT License. See License.txt in the project root for license information.
- *--------------------------------------------------------------------------------------------*/
-
 // ----------------------------------------------------------------------------
 //  @unity chat mention parser
 //  Plan-10 · Sprint U3 · Task U3.5

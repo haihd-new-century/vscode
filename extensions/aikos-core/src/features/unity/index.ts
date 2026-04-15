@@ -1,8 +1,3 @@
-/*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
- *  Licensed under the MIT License. See License.txt in the project root for license information.
- *--------------------------------------------------------------------------------------------*/
-
 // ----------------------------------------------------------------------------
 //  Unity sidebar registration entry-point.
 //  Wired into extension.ts via registerUnitySessionsView().
@@ -110,6 +105,7 @@ export function registerUnitySessionsView(
     }),
   );
 
+  // U5.6 — one-click install into Unity projects without the package.
   void registerInstallMcpCommand(context).then((items) => {
     items.forEach((d) => context.subscriptions.push(d));
   });

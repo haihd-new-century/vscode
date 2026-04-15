@@ -180,8 +180,7 @@ export class AgentPanelViewPane extends ViewPane {
 				}
 			} else {
 				const content = dom.append(msgEl, dom.$('.aikos-agent-msg-content'));
-				// Simple markdown-like rendering
-				content.innerHTML = this._renderMarkdown(msg.content);
+				this._appendMarkdown(content, msg.content);
 			}
 
 			if (msg.filesChanged && msg.filesChanged.length > 0) {
@@ -204,16 +203,33 @@ export class AgentPanelViewPane extends ViewPane {
 		}
 	}
 
-	private _renderMarkdown(text: string): string {
-		// Very basic markdown rendering (safe - no user HTML)
-		return text
-			.replace(/&/g, '&amp;')
-			.replace(/</g, '&lt;')
-			.replace(/>/g, '&gt;')
-			.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-			.replace(/\*(.+?)\*/g, '<em>$1</em>')
-			.replace(/`(.+?)`/g, '<code>$1</code>')
-			.replace(/\n/g, '<br>');
+	private _appendMarkdown(parent: HTMLElement, text: string): void {
+		// TrustedHTML-safe DOM builder. Supports **bold**, *italic*, `code`, and line breaks.
+		const lines = text.split('\n');
+		for (let i = 0; i < lines.length; i++) {
+			if (i > 0) { parent.appendChild(document.createElement('br')); }
+			this._appendInline(parent, lines[i]);
+		}
+	}
+
+	private _appendInline(parent: HTMLElement, text: string): void {
+		const re = /(\*\*([^*]+)\*\*)|(\*([^*]+)\*)|(`([^`]+)`)/g;
+		let lastIdx = 0;
+		let m: RegExpExecArray | null;
+		while ((m = re.exec(text)) !== null) {
+			if (m.index > lastIdx) {
+				parent.appendChild(document.createTextNode(text.slice(lastIdx, m.index)));
+			}
+			let el: HTMLElement;
+			if (m[2] !== undefined) { el = document.createElement('strong'); el.textContent = m[2]; }
+			else if (m[4] !== undefined) { el = document.createElement('em'); el.textContent = m[4]; }
+			else { el = document.createElement('code'); el.textContent = m[6]; }
+			parent.appendChild(el);
+			lastIdx = m.index + m[0].length;
+		}
+		if (lastIdx < text.length) {
+			parent.appendChild(document.createTextNode(text.slice(lastIdx)));
+		}
 	}
 
 	private _updateModeButton(): void {

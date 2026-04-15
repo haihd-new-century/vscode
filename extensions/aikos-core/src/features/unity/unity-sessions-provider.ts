@@ -1,8 +1,3 @@
-/*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
- *  Licensed under the MIT License. See License.txt in the project root for license information.
- *--------------------------------------------------------------------------------------------*/
-
 // ----------------------------------------------------------------------------
 //  Sidebar TreeDataProvider for connected Unity Editor sessions.
 //  Plan-10 · Sprint U3 · Task U3.4

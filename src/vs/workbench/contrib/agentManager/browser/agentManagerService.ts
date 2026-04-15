@@ -33,6 +33,8 @@ export interface IAgentSession {
 	model: string;
 	createdAt: number;
 	isActive: boolean;
+	/** DB conversation UUID (lazy-created on first ask-mode message). */
+	conversationId?: string;
 }
 
 export interface IAgentManagerService {
@@ -66,9 +68,7 @@ export const IAgentManagerService = createDecorator<IAgentManagerService>('agent
 // --- Configuration keys ---
 
 const CONFIG_API_URL = 'aikos.apiUrl';
-const CONFIG_AGENT_SERVICE_URL = 'aikos.agentServiceUrl';
 const DEFAULT_API_URL = 'http://localhost:3001/api/v1';
-const DEFAULT_AGENT_URL = 'http://localhost:8100';
 
 // --- SSE Event types from AIKOS API ---
 
@@ -112,10 +112,6 @@ export class AgentManagerService extends Disposable implements IAgentManagerServ
 
 	private get apiUrl(): string {
 		return this.configurationService.getValue<string>(CONFIG_API_URL) || DEFAULT_API_URL;
-	}
-
-	private get agentServiceUrl(): string {
-		return this.configurationService.getValue<string>(CONFIG_AGENT_SERVICE_URL) || DEFAULT_AGENT_URL;
 	}
 
 	// --- Public API ---
@@ -264,10 +260,30 @@ export class AgentManagerService extends Disposable implements IAgentManagerServ
 	 * Uses SSE endpoint: POST /chat/completions/stream
 	 */
 	private async _streamChatResponse(query: string, assistantMsg: IAgentMessage): Promise<void> {
-		const url = `${this.apiUrl}/chat/completions/stream`;
+		const baseUrl = this.apiUrl.replace(/\/+$/, '');
+
+		// Lazy-create a DB conversation the first time ask-mode is used in this session.
+		if (this._session && !this._session.conversationId) {
+			const res = await fetch(`${baseUrl}/chat/conversations`, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ title: this._session.title || 'VS Code Agent' }),
+			});
+			if (!res.ok) {
+				const text = await res.text().catch(() => '');
+				throw new Error(`Failed to create conversation (${res.status}): ${text.slice(0, 200)}`);
+			}
+			const conv = await res.json().catch(() => ({} as { id?: string }));
+			if (!conv?.id) {
+				throw new Error('Conversation response missing id');
+			}
+			this._session.conversationId = conv.id;
+		}
+
+		const url = `${baseUrl}/chat/completions/stream`;
 		const body = {
 			query,
-			conversationId: this._session?.id,
+			conversationId: this._session?.conversationId,
 			modelId: this._session?.model === 'Auto' ? undefined : this._session?.model,
 		};
 
@@ -279,14 +295,19 @@ export class AgentManagerService extends Disposable implements IAgentManagerServ
 	 * Uses SSE endpoint: GET /agent/stream?query=...
 	 */
 	private async _streamAgentResponse(query: string, assistantMsg: IAgentMessage): Promise<void> {
-		const baseUrl = this.agentServiceUrl || this.apiUrl;
-		const url = new URL('/agent/stream', baseUrl);
-		url.searchParams.set('query', query);
+		// Always route through NestJS proxy (apiUrl). Direct Python service (agentServiceUrl)
+		// uses /api/v1/agent/stream and may be CSP-blocked from the workbench.
+		const baseUrl = this.apiUrl.replace(/\/+$/, '');
+		const params = new URLSearchParams({ query });
 		if (this._session?.model && this._session.model !== 'Auto') {
-			url.searchParams.set('model', this._session.model);
+			params.set('model', this._session.model);
 		}
+		if (this._session?.id) {
+			params.set('session_id', this._session.id);
+		}
+		const url = `${baseUrl}/agent/stream?${params.toString()}`;
 
-		await this._consumeSSEStream(url.toString(), 'GET', undefined, assistantMsg);
+		await this._consumeSSEStream(url, 'GET', undefined, assistantMsg);
 	}
 
 	/**

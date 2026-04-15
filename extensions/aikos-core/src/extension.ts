@@ -1,8 +1,3 @@
-/*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
- *  Licensed under the MIT License. See License.txt in the project root for license information.
- *--------------------------------------------------------------------------------------------*/
-
 import * as vscode from 'vscode';
 import { AikosConfig } from './core/config';
 import { AikosApiClient } from './core/api-client';
@@ -30,6 +25,7 @@ import { ApprovalTreeProvider } from './features/approval/approval-provider';
 import { CollectionsTreeProvider } from './features/collections/collections-provider';
 import { SearchTreeProvider } from './features/search/search-provider';
 import { registerUnitySessionsView, UnityFeature } from './features/unity';
+import { registerMemoryView } from './features/memory/memory-provider';
 
 // ─── Global instances ──────────────────────────────────────────────────────
 
@@ -95,6 +91,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
   chatProvider.attachUnity(unityFeature.provider, unityFeature.state);
   context.subscriptions.push({ dispose: () => unityFeature.dispose() });
 
+  registerMemoryView(context, apiClient);
+
   // 4. Register editor providers
   registerCompletionProvider(context, apiClient, config);
   registerCodeLensProvider(context, config);
@@ -111,18 +109,15 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
   aikosStatusBar = new AikosStatusBar(apiClient, state);
   context.subscriptions.push({ dispose: () => aikosStatusBar.dispose() });
 
-  // 5. Try to connect
-  const connected = await apiClient.initialize();
-  aikosStatusBar.updateConnection(connected);
-
-  if (connected) {
-    // Connect WebSocket
+  // 5. Try to connect (fire-and-forget — don't block activation on network I/O)
+  void apiClient.initialize().then(async (connected) => {
+    aikosStatusBar.updateConnection(connected);
     const apiKey = await config.getApiKey();
-    ws.connect(config.apiUrl, apiKey);
-
-    logInfo('AIKOS AI connected successfully');
-  } else {
-    const apiKey = await config.getApiKey();
+    if (connected) {
+      ws.connect(config.apiUrl, apiKey);
+      logInfo('AIKOS AI connected successfully');
+      return;
+    }
     if (!apiKey) {
       const action = await vscode.window.showInformationMessage(
         'AIKOS AI: Set your API key to get started.',
@@ -134,7 +129,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     } else {
       logWarn('AIKOS AI: API unreachable. Will retry every 30s.');
     }
-  }
+  });
 
   // 6. Health check interval with offline detection
   healthCheckTimer = setInterval(async () => {

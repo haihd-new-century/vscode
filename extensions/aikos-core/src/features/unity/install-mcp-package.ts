@@ -1,8 +1,3 @@
-/*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
- *  Licensed under the MIT License. See License.txt in the project root for license information.
- *--------------------------------------------------------------------------------------------*/
-
 // ----------------------------------------------------------------------------
 //  Plan-10 · Sprint U5 · Task U5.6 — One-click AIKOS MCP install for Unity.
 //

@@ -30,7 +30,7 @@
     "code-completion"
   ],
   "icon": "media/icon.png",
-  "main": "./dist/extension.js",
+  "main": "./out/extension.js",
   "activationEvents": [
     "onStartupFinished"
   ],
@@ -140,6 +140,11 @@
         "icon": "$(close)"
       },
       {
+        "command": "aikos.task.rollback",
+        "title": "AIKOS: Rollback Task",
+        "icon": "$(discard)"
+      },
+      {
         "command": "aikos.collections.addFile",
         "title": "AIKOS: Add to Collection"
       },
@@ -150,6 +155,16 @@
       {
         "command": "aikos.metrics",
         "title": "AIKOS: View Metrics"
+      },
+      {
+        "command": "aikos.audit",
+        "title": "AIKOS: View Audit Log",
+        "icon": "$(output)"
+      },
+      {
+        "command": "aikos.workflows",
+        "title": "AIKOS: Run Workflow",
+        "icon": "$(play)"
       },
       {
         "command": "aikos.settings",
@@ -185,6 +200,11 @@
       {
         "command": "aikos.unity.openDashboard",
         "title": "AIKOS: Open Unity Dashboard"
+      },
+      {
+        "command": "aikos.unity.installMcp",
+        "title": "AIKOS: Install Unity MCP Package",
+        "icon": "$(package)"
       }
     ],
     "keybindings": [
@@ -270,6 +290,11 @@
         {
           "command": "aikos.task.resume",
           "when": "view == aikos.tasks && viewItem == paused",
+          "group": "inline"
+        },
+        {
+          "command": "aikos.task.rollback",
+          "when": "view == aikos.tasks && viewItem == completed",
           "group": "inline"
         },
         {
@@ -446,7 +471,7 @@
     "build": "node esbuild.config.mjs",
     "watch": "node esbuild.config.mjs --watch",
     "lint": "eslint src/",
-    "test": "mocha --require ts-node/register 'test/unit/**/*.test.ts'",
+    "test": "mocha --require ts-node/register --ui tdd test/unit/**/*.test.ts",
     "test:e2e": "node ./test/run-tests.js",
     "package": "vsce package --no-dependencies",
     "publish": "vsce publish"
